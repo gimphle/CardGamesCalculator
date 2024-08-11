@@ -10,9 +10,8 @@ $(document).ready(() => {
         $("#modal").hide();
         $("#leaderboard").show();
         $("#controls").show();
+        renderPlayers();
     }
-
-    renderPlayers();
 });
 
 function closeModal() {
@@ -24,27 +23,67 @@ function clearModalBody() {
     $("#modal #modal-submit").off();
 }
 
+function addMorePlayer() {
+    const addInputsElement = $("#modal .modal-body > #add-inputs");
+    const element = `<div class="mt-3"><input class="add-player-inputs form-control" type="text" placeholder="Tên${
+        addInputsElement.children().length + 1
+    }" /></div>`;
+    addInputsElement.append(element);
+}
+
+function removeLastPlayer() {
+    const addInputsElement = $("#modal .modal-body > #add-inputs");
+    addInputsElement.children().last().remove();
+}
+
 function renderInitialAddPlayerInputs() {
     const modalBody = $("#modal .modal-body");
     const submitButton = $("#modal #modal-submit");
+
+    modalBody.append(
+        `<div class="mt-3" id="add-controls">
+        <button type="button" class="btn btn-outline-primary" onclick="addMorePlayer()">Thêm người</button>
+        <button type="button" class="btn btn-outline-danger" onclick="removeLastPlayer()">Bớt người</button>
+        </div>`
+    );
+    modalBody.append(`<div id="add-inputs"></div>`);
+    modalBody.append(`<div class="invalid-feedback">
+    Trùng tên nha
+  </div>`);
+
+    const addInputsElement = $("#modal .modal-body > #add-inputs");
+
     for (let i = 1; i < 5; i++) {
         const element = `<div class="mt-3"><input class="add-player-inputs form-control" type="text" placeholder="Tên${i}" /></div>`;
-        modalBody.append(element);
+        addInputsElement.append(element);
     }
 
-    submitButton.on("click", () => {
-        addPlayers();
+    submitButton.on("click", (e) => {
+        e.preventDefault();
+        const players = $(".add-player-inputs");
+        const filteredList = Array.from(
+            players.filter((_, p) => $(p).val()).map((_, p) => $(p).val())
+        );
+        const setList = new Set(filteredList);
+        if (filteredList.length !== setList.size) {
+            e.stopPropagation();
+            $(".invalid-feedback").show();
+            return;
+        } else {
+            $(".invalid-feedback").hide();
+        }
+
+        addPlayers(filteredList);
+        location.reload();
         closeModal();
     });
 }
 
-function addPlayers() {
-    const players = $(".add-player-inputs");
+function addPlayers(keys) {
     const playerList = [];
-
-    for (const player of players.filter((_, p) => $(p).val())) {
+    for (const key of keys) {
         playerList.push({
-            key: $(player).val(),
+            key,
             value: 0,
         });
     }
@@ -98,16 +137,29 @@ function renderModalForCalculating() {
         modalBody.append(element);
     });
 
-    modalBody.append(`<div class="invalid-feedback">
+    modalBody.append(`<div id="sum-error" class="invalid-feedback">
     Tổng phải = 0 cha
+  </div>`);
+    modalBody.append(`<div id="limit-error" class="invalid-feedback">
+    Tính tiền cho 4 ng thôi
   </div>`);
 
     modal.show();
     submitButton.on("click", (e) => {
         const inputs = $("#modal .modal-body .add-player-total");
         const mappedValues = Array.from(
-            inputs.map((_, input) => parseInt($(input).val() || 0))
+            inputs
+                .filter((_, p) => $(p).val())
+                .map((_, input) => parseInt($(input).val() || 0))
         );
+
+        if (mappedValues.length > 4) {
+            e.preventDefault();
+            e.stopPropagation();
+            $("#limit-error").show();
+        } else {
+            $("#limit-error").hide();
+        }
 
         const sum = mappedValues.reduce(
             (partialSum, value) => partialSum + value
@@ -116,10 +168,10 @@ function renderModalForCalculating() {
         if (sum != 0) {
             e.preventDefault();
             e.stopPropagation();
-            $(".invalid-feedback").show();
+            $("#sum-error").show();
             return;
         } else {
-            $(".invalid-feedback").hide();
+            $("#sum-error").hide();
         }
 
         for (const input of inputs) {

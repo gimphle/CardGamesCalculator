@@ -28,7 +28,7 @@ function renderInitialAddPlayerInputs() {
     const modalBody = $("#modal .modal-body");
     const submitButton = $("#modal #modal-submit");
     for (let i = 1; i < 5; i++) {
-        const element = `<input class="add-player-inputs form-control" type="text" placeholder="Tên${i}" />`;
+        const element = `<div class="mt-3"><input class="add-player-inputs form-control" type="text" placeholder="Tên${i}" /></div>`;
         modalBody.append(element);
     }
 
@@ -91,15 +91,15 @@ function renderModalForCalculating() {
     const submitButton = $("#modal #modal-submit");
     const playerList = getPlayerList();
 
-    playerList.forEach((player, index) => {
-        const element = `<label for="tinh-tien-player-${player.index}" class="form-label">${player.key}</label>
-        <input key="${index}" id="tinh-tien-player-${player.index}" class="add-player-total form-control" type="number" />`;
+    playerList.forEach((player, _) => {
+        const element = `<div class="mt-3"><label for="tinh-tien-player-${player.index}" class="form-label">${player.key}</label>
+        <input key="${player.key}" id="tinh-tien-player-${player.index}" class="add-player-total form-control" type="number" /></div>`;
 
         modalBody.append(element);
     });
 
     modalBody.append(`<div class="invalid-feedback">
-    Tổng có = 0 đâu
+    Tổng phải = 0 cha
   </div>`);
 
     modal.show();
@@ -127,8 +127,9 @@ function renderModalForCalculating() {
             const value = parseInt($(input).val());
 
             if (value) {
-                const intValue = parseInt(playerList[key].value);
-                playerList[key].value = intValue + value;
+                const index = playerList.findIndex((i) => i.key === key);
+                const intValue = parseInt(playerList[index].value);
+                playerList[index].value = intValue + value;
             }
         }
 
